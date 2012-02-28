@@ -1,0 +1,209 @@
+=================================================================
+README
+=================================================================
+Este es el Readme para evolucionar en paralelo un sistema de N-cuerpos 
+con interaccion gravitacional.
+Se especifican cada uno de los archivos, sus funciones y como utilizarlos.
+
+
+    Copyright (C) 2008  Edison Montoya, eamonto@gmail.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+Up to date: 28 Feb 2012					
+
+=================================================================
+
+
+para compilar el programa se debe ejecutar
+
+$make
+
+
+Para ejecutar el programa (simulacion.out) se debe ejecutar
+
+$make run
+
+Donde se debe especificar en las variables del Makefile los archivos 
+
+INITFILE = init.txt
+INPUTFILE = entrada.dat
+OUTPUTFILE = salida
+
+(estos son los valores por defecto). Haciendo esto el programa ira a buscar 
+el archivo de entrada (INPUTFILE) de los datos y escribira las salidas en 
+la carpeta OUTPUTFILE
+
+
+La forma en que ejecuta el programa es
+
+$mpiexec ./exec <initfile> <inputfile> <outputfile>
+
+
+exec         --> ejecutable 
+
+<initfile>   --> Contine los parametros iniciales del sistema.
+
+<inputfile>  --> Contiene las condiciones iniciales de las particulas, orden:
+	    	 distacia radial, posicion x, y, z, velocidad x, y, z, masa. 
+
+<outputfile> --> Nombre del archivo de salida de la simulacion.
+
+
+ejemplo:
+$mpiexec -np 2 ./simulacion.out init.txt input_file.dat exit_dir
+
+
+Todos los archivo de salida son escritos en la carpeta "outputfile",
+los archivo son:
+
+*los que contienen la evolucion del sistema <outputfile>_#.dat, con
+ los datos: radio, posicion x,y,z, velocidad x,y,z y la masa.
+ 
+*Tambien se escribe un archivo que contiene la evolucion de la energia 
+ del sistema llamado <outputfile>_energy.dat, contiene los datos:
+ tiempo, energia total, energia potencial, energia cinetica
+
+
+Los archivos contenidos en esta carpeta son: 
+
+
+========================================================================
+init.txt
+========================================================================
+Contiene los parametros de la sistema y de la simulacion, las unidades
+las define el usuario 
+
+1000          NUMERO DE PARTICULAS
+0.001         TIEMPO DE INTEGRACION
+1.0           CONSTANTE DE GRAVITACION
+0.0           ROTACION DEL SISTEMA
+1.0	      NUMERO DE ARCHIVOS
+1.0	      NUMERO DE SIMULACIONES POR ARCHIVO
+0.001	      EPS (LONGITUD DE SUAVIZADO)
+0	      ELECTION OF INTEGRATOR, 0=SIMPLECTICO, 1=RK4, 2=SYMPLECTICO
+
+
+========================================================================
+entrada.dat
+========================================================================
+Este archivo contiene las condiciones iniciales para 1000 particulas 
+que conforman un sistema estelar politropico con indice politropico n=1.5,
+este archivo se incluye para que se pueda hacer un test del programa. Los
+datos inicial (init.txt) y los valores del Makefile estan definidos por 
+defecto para este sistema. El resultado debe ser que el sistema permanece
+en equilibrio durante la evolucion.
+
+
+========================================================================
+simulacion.c
+========================================================================
+Es el programa principal, en el cual se coordinan todas las operaciones.
+El programa se desarrollo con dos integradores distintos un RK4 y metodo
+simplectico (leapfrog), ambos metodos necesitan de las rutinas contenidas en 
+lib_simulaction.c, los metodos estan implementados en el archivo
+integradores.c
+
+
+
+========================================================================
+header.c
+========================================================================
+En el se declaran las variables globales y se 
+crea la estructura principal del programa "Particle" que contiene la 
+informacion de las particulas: distacia radial, posicion, velocidad, masa.
+
+
+
+=========================================================================
+lib_simulacion.c
+=========================================================================
+Contiene una serie de rutinas estandares en la implementacion de N-Cuerpos
+y las rutinas de entrada y salida de datos, las rutinas son
+
+/////// ACELERATION(in variable acele) OF PARTICLE i///////////
+int aceleration(int i,double *acele);
+
+/////////////CALCULATE OF GRAVITATIONAL POTENCIAL///////////////
+double potcalc(int i);
+
+/////////////////////////////TOTAL ENERGY/////////////////////////
+int energy(double time,int *par_proc);
+
+///////////////////CENTER OF MASS POSITION//////////////////////
+int centermasspos(int *par_proc);
+
+////////////////////CENTER OF MASS VELOCITY/////////////////////
+int centermassvel(int *par_proc);
+
+///////////VERIFICATION OF INPUT FILES/////////////
+int usage(void);
+
+//REMOVE OLD outputfile AND CREATE A NEW ONE
+int create_remove_dir(void);
+
+//////////////////READ PARAMETERS OF THE STAR///////////////////
+int read_in(int *input_array_int,double *input_array);
+
+////////////READ INITIAL POSITIONS AND VELOCITYS////////////////
+int read_input(void);
+
+/////////WRITE RADIUS, POSITIONS, VELOCITIES AND MASS//////////////
+int write_output(int j);
+
+////////ALLOCATE MEMORY////////////
+int allocate_memory(void);
+
+/////////FREE MEMORY THAT WAS ALLOCATE IN THE PROGRAM///////////
+int free_memory(void);
+
+///////PROCESSOR myrank MAKE A BROADCAST OF POSITIONS////////
+int Bcast_part_pos (int myrank,int min, int max);
+
+///////PROCESSOR myrank MAKE A BROADCAST OF VELOCITIES////////
+int Bcast_part_vel (int myrank,int min, int max);
+
+/////PROCESSOR myrank MAKE A BROADCAST OF PATICLE STRUCTURE/////
+int Bcast_part_struct (int myrank);
+
+
+
+
+=========================================================================
+integradores.c
+=========================================================================
+Esta libreria contiene la inplementacion de un integrador simplectico 
+de segundo orden (leapfrog) para N-cuerpos, y un integrador Runge-Kutta 4.
+contiene de las siguientes rutinas
+
+//////////////////////RUNGE-KUTTA4////////////////////////////////
+int RK4(int *par_proc);
+
+///////////////////SIMULATION OF DYNAMIC OF THE STAR//////////////
+int RK4_integration(int *par_proc);
+
+///////////////////SYMPLECTIC INTEGRATOR//////////////////
+int symplectic_integration2(int *par_proc);
+
+///////////////////SYMPLECTIC INTEGRATOR//////////////////
+int symplectic_integration(int *par_proc);
+
+//////CALCULATE ARRAY FOR NUMBER OF PARTICLES PER PROCESATOR////////
+int Num_par_proc_division(int *par_proc);
+
+////////THE BOSS OF INTEGRATOR AND EXIT DATES//////////
+int emulator(void);
+
+

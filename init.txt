@@ -1,0 +1,26 @@
+1000
+0.005     
+1.0
+0.0     
+10.0		
+10.0	
+0.16264
+0
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+1000          NUMERO DE PARTICULAS
+0.01          TIEMPO DE INTEGRACION
+1.0           CONSTANTE DE GRAVITACION
+0.0           ROTACION DEL SISTEMA
+1.0	      NUMERO DE ARCHIVOS
+1.0	      NUMERO DE SIMULACIONES POR ARCHIVO
+0.01	      EPS (LONGITUD DE SUAVIZADO)
+0	      ELECTION OF INTEGRATOR, 0=SYMPLECTIC, 1=RK4, 2 second symplectic
+
+
+
+
+
